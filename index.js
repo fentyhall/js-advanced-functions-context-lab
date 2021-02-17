@@ -9,14 +9,72 @@
  for you to use if you need it!
  */
 
-let allWagesFor = function () {
-    let eligibleDates = this.timeInEvents.map(function (e) {
-        return e.date
+function createEmployeeRecord(record) {
+    return {
+        firstName: record[0],
+        familyName: record[1],
+        title: record[2],
+        payPerHour: record[3],
+        timeInEvents: [],
+        timeOutEvents: []
+    }
+}
+
+function createEmployeeRecords(arr) {
+    return arr.map(employee => createEmployeeRecord(employee))
+}
+
+function createTimeInEvent(datestamp) {
+    let [date, time] = datestamp.split(' ');
+    
+    this.timeInEvents.push({
+        type: "TimeIn",
+        date, 
+        hour: parseInt(time)
     })
 
-    let payable = eligibleDates.reduce(function (memo, d) {
-        return memo + wagesEarnedOnDate.call(this, d)
-    }.bind(this), 0) // <== Hm, why did we need to add bind() there? We'll discuss soon!
+    return this;
+}
 
-    return payable
+function createTimeOutEvent(datestamp) {
+    let [date, time] = datestamp.split(' ');
+
+    this.timeOutEvents.push({
+        type: "TimeOut",
+        date, 
+        hour: parseInt(time)
+    })
+
+    return this;
+}
+
+function hoursWorkedOnDate(date) {
+    let endEvent = this.timeOutEvents.find(obj => obj.date === date);
+    let startEvent = this.timeInEvents.find(obj => obj.date === date);
+
+    return (endEvent.hour - startEvent.hour) / 100;
+}
+
+function wagesEarnedOnDate(date) {
+    return hoursWorkedOnDate.call(this, date) * this.payPerHour;
+}
+
+let allWagesFor = function () {
+    let allDates = this.timeInEvents.map(e => e.date);
+
+    let payable = allDates.reduce(function (total, date) {
+        return total + wagesEarnedOnDate.call(this, date)
+    }.bind(this), 0);
+
+    return payable;
+}
+
+function findEmployeeByFirstName(srcArray, firstName) {
+    return srcArray.find(employee => employee.firstName === firstName);
+}
+
+function calculatePayroll(arr) {
+    return arr.reduce(function(total, employee) {
+        return total + allWagesFor.call(employee);
+    }, 0);
 }
